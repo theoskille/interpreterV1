@@ -1,8 +1,12 @@
 #include "Lox.h"
 #include <iostream>
 #include <fstream>
+#include <memory> 
 #include "Scanner.h"
+#include "Parser.h"
 #include "Token.h"
+#include "Expr.h"
+#include "AstPrinter.h"
 using namespace std;
 
 // Initialize static member
@@ -10,16 +14,26 @@ bool Lox::hadError = false;
 
 void Lox::run(string source) {
     Scanner scanner(source);
-    vector<Token*> tokens = scanner.scanTokens();
+    vector<Token> tokens = scanner.scanTokens();
     
     // Print all tokens
-    for(const Token* token : tokens) {
-        cout << *token << endl;
+    cout << "Tokens:" << endl;
+    for(const Token& token : tokens) {
+        cout << token << endl;
     }
 
-    // Clean up tokens
-    for(Token* token : tokens) {
-        delete token;
+    // Parse tokens into an abstract syntax tree
+    Parser parser(tokens);
+    shared_ptr<Expr> expression = parser.parse();
+
+    if(hadError)
+        return;
+
+    // Print the syntax tree if parsing was successful
+    if (expression) {
+        cout << "\nAbstract Syntax Tree:" << endl;
+        AstPrinter printer;
+        cout << printer.print(expression.get()) << endl;
     }
 }
 
@@ -62,6 +76,14 @@ void Lox::runFile(string path) {
 
 void Lox::error(int line, string message) {
     report(line, "", message);
+}
+
+void Lox::error(Token token, string message) {
+    if (token.type == EOF_TOKEN) {
+        report(token.line, " at end", message);
+    } else {
+        report(token.line, " at '" + token.lexeme + "'", message);
+    }
 }
 
 void Lox::report(int line, string where, string message) {

@@ -2,21 +2,20 @@
 #define TOKEN_H
 
 #include <string>
-#include <variant>
 #include <ostream>
 #include "TokenType.h"
+#include "Literal.h"
 
 class Token {
-private:
+public:
     TokenType type;
     std::string lexeme;
-    std::variant<std::string, double, std::monostate> literal;
+    Literal literal;
     int line;
 
-public:
-    Token(TokenType type, std::string lexeme, std::variant<std::string, double, std::monostate> literal, int line);
+    Token(TokenType type, std::string lexeme, Literal literal, int line);
     std::string toString() const;
     friend std::ostream& operator<<(std::ostream& os, const Token& token);
 };
 
-#endif // TOKEN_H 
+#endif // TOKEN_H

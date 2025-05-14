@@ -29,12 +29,12 @@ bool Scanner::isAtEnd() {
     return current >= source.length();
 }
 
-vector<Token*> Scanner::scanTokens() {
+vector<Token> Scanner::scanTokens() {
     while(!isAtEnd()) {
         start = current;
         scanToken();
     }
-    tokens.push_back(new Token(EOF_TOKEN, "", monostate{}, line));
+    tokens.push_back(Token(EOF_TOKEN, "", Literal(), line));
     return tokens;
 }
 
@@ -96,12 +96,12 @@ char Scanner::advance() {
 }
 
 void Scanner::addToken(TokenType type) {
-    addToken(type, monostate{});
+    addToken(type, Literal());
 }
 
-void Scanner::addToken(TokenType type, variant<string, double, monostate> literal) {
+void Scanner::addToken(TokenType type, Literal literal) {
     string text = source.substr(start, current - start);
-    tokens.push_back(new Token(type, text, literal, line));
+    tokens.push_back(Token(type, text, literal, line));
 } 
 
 bool Scanner::match(char expected) {
@@ -153,7 +153,7 @@ void Scanner::handleString() {
     advance(); // closing ".
 
     string value = source.substr(start + 1, current - start - 2);
-    addToken(STRING, value);
+    addToken(STRING, Literal(value));
 }
 
 void Scanner::handleNumber() {
@@ -168,7 +168,7 @@ void Scanner::handleNumber() {
 
     string numberStr = source.substr(start, current - start);
     double value = stod(numberStr);
-    addToken(NUMBER, value);
+    addToken(NUMBER, Literal(value));
 }
 
 void Scanner::handleIdentifier() {

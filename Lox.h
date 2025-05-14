@@ -2,6 +2,7 @@
 #define LOX_H
 
 #include <string>
+#include "Token.h"
 
 class Lox {
 private:
@@ -14,6 +15,7 @@ public:
     static void runPrompt();
     static void runFile(std::string path);
     static void error(int line, std::string message);
+    static void error(Token token, std::string message);
 };
 
 #endif // LOX_H 

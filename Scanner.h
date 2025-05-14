@@ -5,12 +5,13 @@
 #include <vector>
 #include <unordered_map>
 #include "Token.h"
+#include "Literal.h"
 
 class Scanner {
 private:
     static const std::unordered_map<std::string, TokenType> keywords;
     std::string source;
-    std::vector<Token*> tokens;
+    std::vector<Token> tokens;
     size_t start = 0;
     size_t current = 0;
     int line = 1;
@@ -19,7 +20,7 @@ private:
     char advance();
     void scanToken();
     void addToken(TokenType type);
-    void addToken(TokenType type, std::variant<std::string, double, std::monostate> literal);
+    void addToken(TokenType type, Literal literal);
     bool match(char expected);
     char peek();
     char peekNext();
@@ -32,7 +33,7 @@ private:
 
 public:
     Scanner(std::string source);
-    std::vector<Token*> scanTokens();
+    std::vector<Token> scanTokens();
 };
 
 #endif // SCANNER_H 

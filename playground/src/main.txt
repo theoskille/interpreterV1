@@ -1,6 +1,2 @@
 // this is a comment
-()(){} + - < <= ==
-"hello world"
-3.14159
-theo
-return
+2 + 3 * 4 - 1 + 2
