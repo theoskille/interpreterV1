@@ -6,11 +6,14 @@
 #include "Parser.h"
 #include "Token.h"
 #include "Expr.h"
+#include "Stmt.h"
 #include "AstPrinter.h"
+#include "Interpreter.h"
 using namespace std;
 
-// Initialize static member
+// Initialize static members
 bool Lox::hadError = false;
+bool Lox::hadRuntimeError = false;
 
 void Lox::run(string source) {
     Scanner scanner(source);
@@ -22,18 +25,19 @@ void Lox::run(string source) {
         cout << token << endl;
     }
 
-    // Parse tokens into an abstract syntax tree
+    // Parse tokens into statements
     Parser parser(tokens);
-    shared_ptr<Expr> expression = parser.parse();
+    vector<shared_ptr<Stmt>> statements = parser.parse();
 
+    // Stop if there was a parsing error
     if(hadError)
         return;
 
-    // Print the syntax tree if parsing was successful
-    if (expression) {
-        cout << "\nAbstract Syntax Tree:" << endl;
-        AstPrinter printer;
-        cout << printer.print(expression.get()) << endl;
+    // Interpret the statements
+    if (!statements.empty()) {
+        cout << "\nInterpreted Result:" << endl;
+        Interpreter interpreter;
+        interpreter.interpret(statements);
     }
 }
 
@@ -46,6 +50,7 @@ void Lox::runPrompt() {
             break;
         run(input);
         hadError = false;
+        hadRuntimeError = false;
     }
 }
 
@@ -72,6 +77,8 @@ void Lox::runFile(string path) {
     run(content);
     if(hadError)
         exit(65);
+    if(hadRuntimeError)
+        exit(70);
 }
 
 void Lox::error(int line, string message) {
@@ -84,6 +91,11 @@ void Lox::error(Token token, string message) {
     } else {
         report(token.line, " at '" + token.lexeme + "'", message);
     }
+}
+
+void Lox::runtimeError(const RuntimeError& error) {
+    cerr << error.what() << "\n[line " << error.getToken().line << "]" << endl;
+    hadRuntimeError = true;
 }
 
 void Lox::report(int line, string where, string message) {

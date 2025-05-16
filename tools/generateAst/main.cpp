@@ -15,13 +15,24 @@ int main(int argc, char* argv[]) {
         exit(65);
     }
     string outputDir = argv[1];
-    vector<string> astDef = {
+    vector<string> exprAstDef = {
+        "Assign: Token name, shared_ptr<Expr> value",
         "Binary: shared_ptr<Expr> left, Token op, shared_ptr<Expr> right",
         "Grouping: shared_ptr<Expr> expression",
         "LiteralExpr: Literal value",
+        "Variable: Token name",
         "Unary: Token op, shared_ptr<Expr> right"
     };
-    defineAst(outputDir, "Expr", astDef);
+    defineAst(outputDir, "Expr", exprAstDef);
+
+    vector<string> stmtAstDef = {
+        "Block: std::vector<shared_ptr<Stmt>> statements",
+        "Expression: shared_ptr<Expr> expression",
+        "Var: Token name, shared_ptr<Expr> initializer",
+        "Print: shared_ptr<Expr> expression"
+    };
+    defineAst(outputDir, "Stmt", stmtAstDef);
+
     return 0;
 }
 
@@ -42,7 +53,14 @@ void defineAst(const string& outputDir, const string& baseName, const vector<str
     writer << "#include <vector>\n";
     writer << "#include <string>\n";
     writer << "#include \"Token.h\"\n";
-    writer << "#include \"Literal.h\"\n\n";
+    writer << "#include \"Literal.h\"\n";
+    writer << "#include \"Value.h\"\n";
+    
+    // Include Expr.h if we're generating Stmt.h
+    if (baseName == "Stmt") {
+        writer << "#include \"Expr.h\"\n";
+    }
+    writer << "\n";
     
     writer << "using std::shared_ptr;\n\n";
     
@@ -52,23 +70,44 @@ void defineAst(const string& outputDir, const string& baseName, const vector<str
     }
     writer << "\n";
     
-    // Define visitor interface - string visitor for AstPrinter
-    writer << "// String visitor interface for AstPrinter\n";
-    writer << "class Visitor {\n";
+    // Define visitor class name based on baseName
+    string visitorClassName = baseName + "Visitor";
+    
+    // Define generic visitor interface with templates
+    writer << "// Generic visitor interface using templates\n";
+    writer << "template<typename R>\n";
+    writer << "class " << visitorClassName << " {\n";
     writer << "public:\n";
-    writer << "    virtual ~Visitor() = default;\n";
+    writer << "    virtual ~" << visitorClassName << "() = default;\n";
     for (const auto& type : types) {
         string className = getClassName(type);
-        writer << "    virtual std::string visit" << className << "(" << className << "* expr) = 0;\n";
+        string paramName = baseName == "Expr" ? "expr" : "stmt";
+        writer << "    virtual R visit" << className << "(" << className << "* " << paramName << ") = 0;\n";
     }
     writer << "};\n\n";
     
+    // Define type aliases for common visitor types
+    writer << "// Convenience type aliases for common visitor types\n";
+    writer << "using " << baseName << "StringVisitor = " << visitorClassName << "<std::string>;\n";
+    
+    if (baseName == "Expr") {
+        writer << "using ValueVisitor = " << visitorClassName << "<Value>;\n\n";
+    } else {
+        writer << "using VoidVisitor = " << visitorClassName << "<void>;\n\n";
+    }
+    
     // Define the base class
-    writer << "// Base expression class\n";
+    writer << "// Base " << (baseName == "Expr" ? "expression" : "statement") << " class\n";
     writer << "class " << baseName << " {\n";
     writer << "public:\n";
     writer << "    virtual ~" << baseName << "() = default;\n";
-    writer << "    virtual std::string accept(Visitor& visitor) = 0;\n";
+    writer << "    virtual std::string accept(" << baseName << "StringVisitor& visitor) = 0;\n";
+    
+    if (baseName == "Expr") {
+        writer << "    virtual Value accept(ValueVisitor& visitor) = 0;\n";
+    } else {
+        writer << "    virtual void accept(VoidVisitor& visitor) = 0;\n";
+    }
     writer << "};\n\n";
 
     // Generate AST classes
@@ -123,10 +162,20 @@ void defineAst(const string& outputDir, const string& baseName, const vector<str
         }
         writer << " {}\n\n";
         
-        // Implement accept method
-        writer << "    std::string accept(Visitor& visitor) override {\n";
+        // Implement accept methods for all visitor types
+        writer << "    std::string accept(" << baseName << "StringVisitor& visitor) override {\n";
         writer << "        return visitor.visit" << className << "(this);\n";
         writer << "    }\n\n";
+        
+        if (baseName == "Expr") {
+            writer << "    Value accept(ValueVisitor& visitor) override {\n";
+            writer << "        return visitor.visit" << className << "(this);\n";
+            writer << "    }\n\n";
+        } else {
+            writer << "    void accept(VoidVisitor& visitor) override {\n";
+            writer << "        visitor.visit" << className << "(this);\n";
+            writer << "    }\n\n";
+        }
         
         // Fields
         writer << "    // Fields\n";

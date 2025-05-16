@@ -4,14 +4,16 @@
 #include <string>
 #include "Expr.h"
 
-class AstPrinter : public Visitor {
+class AstPrinter : public ExprStringVisitor {
 public:
     std::string print(Expr* expr);
 
+    std::string visitAssign(Assign* expr) override;
     std::string visitBinary(Binary* expr) override;
     std::string visitGrouping(Grouping* expr) override;
     std::string visitLiteralExpr(LiteralExpr* expr) override;
     std::string visitUnary(Unary* expr) override;
+    std::string visitVariable(Variable* expr) override;
 
 private:
     std::string parenthesize(const std::string& name, Expr* expr);

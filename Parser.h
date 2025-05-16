@@ -9,6 +9,7 @@
 #include "Token.h"
 #include "TokenType.h"
 #include "Expr.h"
+#include "Stmt.h"
 
 // Custom exception for Parser errors
 class ParseError : public std::runtime_error {
@@ -21,7 +22,17 @@ class Parser {
         int current = 0;
         std::vector<Token> tokens;
 
+        // Stmt parsing methods
+        std::shared_ptr<Stmt> declaration();
+        std::shared_ptr<Stmt> varDeclaration();
+        std::shared_ptr<Expr> expression();
+        std::shared_ptr<Stmt> statement();
+        std::shared_ptr<Stmt> printStatement();
+        std::shared_ptr<Stmt> expressionStatement();
+        std::vector<std::shared_ptr<Stmt>> block();
+
         // Recursive descent parsing methods
+        std::shared_ptr<Expr> assignment();
         std::shared_ptr<Expr> equality();
         std::shared_ptr<Expr> comparison();
         std::shared_ptr<Expr> term();
@@ -44,8 +55,7 @@ class Parser {
     
     public:
         Parser(std::vector<Token>& tokens);
-        std::shared_ptr<Expr> expression();
-        std::shared_ptr<Expr> parse(); // Main parsing method
+        std::vector<std::shared_ptr<Stmt>> parse(); // Main parsing method
 };
 
 #endif // PARSER_H 

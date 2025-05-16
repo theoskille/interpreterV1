@@ -8,6 +8,12 @@ string AstPrinter::print(Expr* expr) {
     return expr->accept(*this);
 }
 
+string AstPrinter::visitAssign(Assign* expr) {
+    stringstream ss;
+    ss << "(= " << expr->name.lexeme << " " << expr->value->accept(*this) << ")";
+    return ss.str();
+}
+
 string AstPrinter::visitBinary(Binary* expr) {
     // TODO: Implement this method
     // Use the parenthesize helper to format the binary expression
@@ -29,6 +35,10 @@ string AstPrinter::visitUnary(Unary* expr) {
     // TODO: Implement this method
     // Use the parenthesize helper to format the unary expression
     return parenthesize(expr->op.lexeme, expr->right.get());
+}
+
+string AstPrinter::visitVariable(Variable* expr) {
+    return expr->name.lexeme;
 }
 
 string AstPrinter::parenthesize(const string& name, Expr* expr) {
