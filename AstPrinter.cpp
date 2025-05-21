@@ -41,6 +41,10 @@ string AstPrinter::visitVariable(Variable* expr) {
     return expr->name.lexeme;
 }
 
+string AstPrinter::visitLogical(Logical* expr) {
+    return parenthesize(expr->op.lexeme, expr->left.get(), expr->right.get());
+}
+
 string AstPrinter::parenthesize(const string& name, Expr* expr) {
     // TODO: Implement this method
     // Create a string that wraps the expression in parentheses with the name

@@ -12,6 +12,7 @@ public:
     std::string visitBinary(Binary* expr) override;
     std::string visitGrouping(Grouping* expr) override;
     std::string visitLiteralExpr(LiteralExpr* expr) override;
+    std::string visitLogical(Logical* expr) override;
     std::string visitUnary(Unary* expr) override;
     std::string visitVariable(Variable* expr) override;
 

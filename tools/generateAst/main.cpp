@@ -20,6 +20,7 @@ int main(int argc, char* argv[]) {
         "Binary: shared_ptr<Expr> left, Token op, shared_ptr<Expr> right",
         "Grouping: shared_ptr<Expr> expression",
         "LiteralExpr: Literal value",
+        "Logical: shared_ptr<Expr> left, Token op, shared_ptr<Expr> right",
         "Variable: Token name",
         "Unary: Token op, shared_ptr<Expr> right"
     };
@@ -27,9 +28,11 @@ int main(int argc, char* argv[]) {
 
     vector<string> stmtAstDef = {
         "Block: std::vector<shared_ptr<Stmt>> statements",
+        "If: shared_ptr<Expr> condition, shared_ptr<Stmt> thenBranch, shared_ptr<Stmt> elseBranch",
         "Expression: shared_ptr<Expr> expression",
         "Var: Token name, shared_ptr<Expr> initializer",
-        "Print: shared_ptr<Expr> expression"
+        "Print: shared_ptr<Expr> expression",
+        "While: shared_ptr<Expr> condition, shared_ptr<Stmt> body"
     };
     defineAst(outputDir, "Stmt", stmtAstDef);
 

@@ -19,11 +19,93 @@ shared_ptr<Stmt> Parser::declaration() {
 }
 
 shared_ptr<Stmt> Parser::statement() {
+    if(match({IF}))
+        return ifStatement();
+    if(match({WHILE}))
+        return whileStatement();
+    if(match({FOR}))
+        return forStatement();
     if (match({PRINT}))
         return printStatement();
     if(match({LEFT_BRACE}))
         return make_shared<Block>(block());
     return expressionStatement();
+}
+
+shared_ptr<Stmt> Parser::ifStatement() {
+    consume(LEFT_PAREN, "Expect '(' after 'if'.");
+    shared_ptr<Expr> condition = expression();
+    consume(RIGHT_PAREN, "Expect ')' after if condition.");
+
+    shared_ptr<Stmt> thenBranch = statement();
+    shared_ptr<Stmt> elseBranch = nullptr;
+    if(match({ELSE}))
+        elseBranch = statement();
+
+    return make_shared<If>(condition, thenBranch, elseBranch);
+}
+
+shared_ptr<Stmt> Parser::whileStatement() {
+    consume(LEFT_PAREN, "Expect '(' after 'while'.");
+    shared_ptr<Expr> condition = expression();
+    consume(RIGHT_PAREN, "Expect ')' after condition.");
+    shared_ptr<Stmt> body = statement();
+
+    return make_shared<While>(condition, body);
+}
+
+shared_ptr<Stmt> Parser::forStatement() {
+    consume(LEFT_PAREN, "Expect '(' after 'for'.");
+    
+    shared_ptr<Stmt> initializer;
+    if(match({SEMICOLON})) {
+        initializer = nullptr;
+    } else if(match({VAR})) {
+        initializer = varDeclaration();
+    } else {
+        initializer = expressionStatement();
+    }
+
+    shared_ptr<Expr> condition = nullptr;
+    if(!check(SEMICOLON)) {
+        condition = expression();
+    }
+    consume(SEMICOLON, "Expect ';' after loop condition.");
+
+    shared_ptr<Expr> increment = nullptr;
+    if(!check(RIGHT_PAREN)) {
+        increment = expression();
+    }
+    consume(RIGHT_PAREN, "Expect ')' after for clauses");
+
+    shared_ptr<Stmt> body = statement();
+
+    // Desugar for loop into a while loop
+    if(increment != nullptr) {
+        // Create a block that contains the body followed by the increment expression
+        vector<shared_ptr<Stmt>> bodyWithIncrement;
+        bodyWithIncrement.push_back(body);
+        bodyWithIncrement.push_back(make_shared<Expression>(increment));
+        body = make_shared<Block>(bodyWithIncrement);
+    }
+
+    // If condition is omitted, use true
+    if(condition == nullptr) {
+        condition = make_shared<LiteralExpr>(Literal(true));
+    }
+    
+    // Make the while loop with the condition and body
+    body = make_shared<While>(condition, body);
+
+    // If there is an initializer, create a block with the initializer and the while loop
+    if(initializer != nullptr) {
+        vector<shared_ptr<Stmt>> statements;
+        statements.push_back(initializer);
+        statements.push_back(body);
+        body = make_shared<Block>(statements);
+    }
+
+    return body;
 }
 
 shared_ptr<Stmt> Parser::printStatement() {
@@ -65,7 +147,7 @@ shared_ptr<Expr> Parser::expression() {
 }
 
 shared_ptr<Expr> Parser::assignment() {
-    shared_ptr<Expr> expr = equality();
+    shared_ptr<Expr> expr = logicalOr();
 
     if(match({EQUAL})) {
         Token equals = previous();
@@ -77,6 +159,30 @@ shared_ptr<Expr> Parser::assignment() {
         }
 
         error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+}
+
+shared_ptr<Expr> Parser::logicalOr() {
+    shared_ptr<Expr> expr = logicalAnd();
+
+    while(match({OR})) {
+        Token op = previous();
+        shared_ptr<Expr> right = logicalAnd();
+        expr = make_shared<Logical>(expr, op, right);
+    }
+
+    return expr;
+}
+
+shared_ptr<Expr> Parser::logicalAnd() {
+    shared_ptr<Expr> expr = equality();
+
+    while(match({AND})) {
+        Token op = previous();
+        shared_ptr<Expr> right = equality();
+        expr = make_shared<Logical>(expr, op, right);
     }
 
     return expr;

@@ -1,12 +1,5 @@
 // this is a comment
-var a = "global a";
-var b = "global b";
-print a;
-{
-    var a = "inner a";
-    var b = "inner b";
 
-    print a;
+for(var i = 0; i < 10; i = i + 1) {
+    print i;
 }
-a = 5;
-print a;

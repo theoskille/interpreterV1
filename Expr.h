@@ -14,6 +14,7 @@ class Assign;
 class Binary;
 class Grouping;
 class LiteralExpr;
+class Logical;
 class Variable;
 class Unary;
 
@@ -26,6 +27,7 @@ public:
     virtual R visitBinary(Binary* expr) = 0;
     virtual R visitGrouping(Grouping* expr) = 0;
     virtual R visitLiteralExpr(LiteralExpr* expr) = 0;
+    virtual R visitLogical(Logical* expr) = 0;
     virtual R visitVariable(Variable* expr) = 0;
     virtual R visitUnary(Unary* expr) = 0;
 };
@@ -107,6 +109,24 @@ public:
 
     // Fields
     Literal value;
+};
+
+class Logical : public Expr {
+public:
+    Logical(const shared_ptr<Expr>& left, const Token& op, const shared_ptr<Expr>& right) : left(left), op(op), right(right) {}
+
+    std::string accept(ExprStringVisitor& visitor) override {
+        return visitor.visitLogical(this);
+    }
+
+    Value accept(ValueVisitor& visitor) override {
+        return visitor.visitLogical(this);
+    }
+
+    // Fields
+    shared_ptr<Expr> left;
+    Token op;
+    shared_ptr<Expr> right;
 };
 
 class Variable : public Expr {

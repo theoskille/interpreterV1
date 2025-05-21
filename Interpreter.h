@@ -39,14 +39,17 @@ public:
     Value visitBinary(Binary* expr) override;
     Value visitGrouping(Grouping* expr) override;
     Value visitLiteralExpr(LiteralExpr* expr) override;
+    Value visitLogical(Logical* expr) override;
     Value visitUnary(Unary* expr) override;
     Value visitVariable(Variable* expr) override;
 
     // Statement visitor implementation
+    void visitBlock(Block* stmt) override;
     void visitExpression(Expression* stmt) override;
+    void visitIf(If* stmt) override;
     void visitPrint(Print* stmt) override;
     void visitVar(Var* stmt) override;
-    void visitBlock(Block* stmt) override;
+    void visitWhile(While* stmt) override;
 
 private:
     Environment* environment;

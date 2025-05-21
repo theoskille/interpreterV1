@@ -12,9 +12,11 @@
 using std::shared_ptr;
 
 class Block;
+class If;
 class Expression;
 class Var;
 class Print;
+class While;
 
 // Generic visitor interface using templates
 template<typename R>
@@ -22,9 +24,11 @@ class StmtVisitor {
 public:
     virtual ~StmtVisitor() = default;
     virtual R visitBlock(Block* stmt) = 0;
+    virtual R visitIf(If* stmt) = 0;
     virtual R visitExpression(Expression* stmt) = 0;
     virtual R visitVar(Var* stmt) = 0;
     virtual R visitPrint(Print* stmt) = 0;
+    virtual R visitWhile(While* stmt) = 0;
 };
 
 // Convenience type aliases for common visitor types
@@ -53,6 +57,24 @@ public:
 
     // Fields
     std::vector<shared_ptr<Stmt>> statements;
+};
+
+class If : public Stmt {
+public:
+    If(const shared_ptr<Expr>& condition, const shared_ptr<Stmt>& thenBranch, const shared_ptr<Stmt>& elseBranch) : condition(condition), thenBranch(thenBranch), elseBranch(elseBranch) {}
+
+    std::string accept(StmtStringVisitor& visitor) override {
+        return visitor.visitIf(this);
+    }
+
+    void accept(VoidVisitor& visitor) override {
+        visitor.visitIf(this);
+    }
+
+    // Fields
+    shared_ptr<Expr> condition;
+    shared_ptr<Stmt> thenBranch;
+    shared_ptr<Stmt> elseBranch;
 };
 
 class Expression : public Stmt {
@@ -102,6 +124,23 @@ public:
 
     // Fields
     shared_ptr<Expr> expression;
+};
+
+class While : public Stmt {
+public:
+    While(const shared_ptr<Expr>& condition, const shared_ptr<Stmt>& body) : condition(condition), body(body) {}
+
+    std::string accept(StmtStringVisitor& visitor) override {
+        return visitor.visitWhile(this);
+    }
+
+    void accept(VoidVisitor& visitor) override {
+        visitor.visitWhile(this);
+    }
+
+    // Fields
+    shared_ptr<Expr> condition;
+    shared_ptr<Stmt> body;
 };
 
 #endif // Stmt_H

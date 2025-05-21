@@ -27,6 +27,20 @@ void Interpreter::visitExpression(Expression* stmt) {
     // We discard the value since this is an expression statement
 }
 
+void Interpreter::visitIf(If* stmt) {
+    if(evaluate(stmt->condition.get()).isTruthy()) {
+        execute(stmt->thenBranch.get());
+    } else if(stmt->elseBranch != nullptr) {
+        execute(stmt->elseBranch.get());
+    }
+}
+
+void Interpreter::visitWhile(While* stmt) {
+    while(evaluate(stmt->condition.get()).isTruthy()) {
+        execute(stmt->body.get());
+    }
+}
+
 void Interpreter::visitPrint(Print* stmt) {
     Value value = evaluate(stmt->expression.get());
     cout << value.toString() << endl;
@@ -71,6 +85,20 @@ void Interpreter::executeBlock(const std::vector<std::shared_ptr<Stmt>>& stateme
 // Expression visitor methods
 Value Interpreter::visitLiteralExpr(LiteralExpr* expr) {
     return literalToValue(expr->value);
+}
+
+Value Interpreter::visitLogical(Logical* expr) {
+    Value left = evaluate(expr->left.get());
+
+    if(expr->op.type == OR) {
+        if(left.isTruthy())
+            return left;
+    } else {
+        if(!left.isTruthy())
+            return left;
+    }
+    
+    return evaluate(expr->right.get());
 }
 
 Value Interpreter::visitGrouping(Grouping* expr) {
