@@ -9,6 +9,8 @@ Parser::Parser(vector<Token>& tokens) : current(0), tokens(tokens) {}
 
 shared_ptr<Stmt> Parser::declaration() {
     try {
+        if(match({FUN}))
+            return function("function");
         if(match({VAR}))
             return varDeclaration();
         return statement();
@@ -27,6 +29,8 @@ shared_ptr<Stmt> Parser::statement() {
         return forStatement();
     if (match({PRINT}))
         return printStatement();
+    if(match({RETURN}))
+        return returnStatement();
     if(match({LEFT_BRACE}))
         return make_shared<Block>(block());
     return expressionStatement();
@@ -129,6 +133,32 @@ shared_ptr<Stmt> Parser::expressionStatement() {
     shared_ptr<Expr> expr = expression();
     consume(SEMICOLON, "Expect ';' after expression.");
     return make_shared<Expression>(expr);
+}
+
+shared_ptr<Stmt> Parser::function(string kind) {
+    // Get the function name
+    Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+    
+    // Parse parameters
+    consume(LEFT_PAREN, "Expect '(' after " + kind + " name.");
+    vector<Token*> parameters;
+    if (!check(RIGHT_PAREN)) {
+        do {
+            if (parameters.size() >= 255) {
+                error(peek(), "Can't have more than 255 parameters.");
+            }
+            
+            Token* param = new Token(consume(IDENTIFIER, "Expect parameter name."));
+            parameters.push_back(param);
+        } while (match({COMMA}));
+    }
+    consume(RIGHT_PAREN, "Expect ')' after parameters.");
+    
+    // Parse the function body
+    consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
+    vector<shared_ptr<Stmt>> body = block();
+    
+    return make_shared<Function>(name, parameters, body);
 }
 
 vector<shared_ptr<Stmt>> Parser::block() {
@@ -239,7 +269,36 @@ shared_ptr<Expr> Parser::unary() {
         return make_shared<Unary>(op, right);
     }
 
-    return primary();
+    return call();
+}
+
+shared_ptr<Expr> Parser::call() {
+    shared_ptr<Expr> expr = primary();
+
+    while(true) {
+        if(match({LEFT_PAREN})) {
+            expr = finishCall(expr);
+        } else {
+            break;
+        }
+    }
+
+    return expr;
+}
+
+shared_ptr<Expr> Parser::finishCall(shared_ptr<Expr> callee) {
+    vector<shared_ptr<Expr>> arguments;
+    if(!check(RIGHT_PAREN)) {
+        do {
+            if(arguments.size() >= 255)
+                error(peek(), "Can't have more than 255 arguments.");
+            arguments.push_back(expression());
+        } while(match({COMMA}));
+    }
+
+    Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments.");
+
+    return make_shared<Call>(callee, paren, arguments);
 }
 
 shared_ptr<Expr> Parser::primary() {
@@ -349,4 +408,17 @@ vector<shared_ptr<Stmt>> Parser::parse() {
         statements.push_back(declaration());
     }
     return statements;
+}
+
+shared_ptr<Stmt> Parser::returnStatement() {
+    Token keyword = previous();
+    shared_ptr<Expr> value = nullptr;
+    
+    // Parse return value if provided
+    if (!check(SEMICOLON)) {
+        value = expression();
+    }
+    
+    consume(SEMICOLON, "Expect ';' after return value.");
+    return make_shared<Return>(keyword, value);
 }

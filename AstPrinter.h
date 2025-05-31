@@ -10,6 +10,7 @@ public:
 
     std::string visitAssign(Assign* expr) override;
     std::string visitBinary(Binary* expr) override;
+    std::string visitCall(Call* expr) override;
     std::string visitGrouping(Grouping* expr) override;
     std::string visitLiteralExpr(LiteralExpr* expr) override;
     std::string visitLogical(Logical* expr) override;

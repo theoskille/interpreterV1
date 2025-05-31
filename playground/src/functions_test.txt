@@ -1,0 +1,6 @@
+// Test the built-in clock function
+print "Current time in seconds since epoch:";
+print clock();
+ 
+// Test calling a function with arguments (will be implemented later)
+// print add(1, 2); 

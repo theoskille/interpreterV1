@@ -6,11 +6,15 @@
 #include <ostream>
 #include <cmath>
 #include <stdexcept>
+#include <memory>
+
+// Forward declarations
+class LoxCallable;
 
 // Value class for interpreter runtime
 class Value {
 private:
-    std::variant<std::string, double, bool, std::monostate> data;
+    std::variant<std::string, double, bool, std::monostate, std::shared_ptr<LoxCallable>> data;
 
 public:
     // Constructors
@@ -19,12 +23,14 @@ public:
     Value(double val) : data(val) {}
     Value(bool val) : data(val) {}
     Value(std::monostate) : data(std::monostate{}) {}
+    Value(std::shared_ptr<LoxCallable> callable) : data(std::move(callable)) {}
 
     // Type checks
     bool isString() const { return std::holds_alternative<std::string>(data); }
     bool isNumber() const { return std::holds_alternative<double>(data); }
     bool isBoolean() const { return std::holds_alternative<bool>(data); }
     bool isNil() const { return std::holds_alternative<std::monostate>(data); }
+    bool isCallable() const { return std::holds_alternative<std::shared_ptr<LoxCallable>>(data); }
     
     // Value getters with type checking
     std::string getString() const { 
@@ -42,28 +48,20 @@ public:
         return std::get<bool>(data); 
     }
     
-    // Conversion to string for display
-    std::string toString() const {
-        if (isString()) return std::get<std::string>(data);
-        if (isNumber()) {
-            std::string text = std::to_string(std::get<double>(data));
-            // Remove trailing zeros
-            if (text.find('.') != std::string::npos) {
-                text = text.substr(0, text.find_last_not_of('0') + 1);
-                if (text.back() == '.') text = text.substr(0, text.size() - 1);
-            }
-            return text;
-        }
-        if (isBoolean()) return std::get<bool>(data) ? "true" : "false";
-        return "nil";
+    std::shared_ptr<LoxCallable> getCallable() const {
+        if (!isCallable()) throw std::runtime_error("Expected callable.");
+        return std::get<std::shared_ptr<LoxCallable>>(data);
     }
+    
+    // Conversion to string for display
+    std::string toString() const;
     
     // Check truthiness according to Lox rules
     bool isTruthy() const {
         if (isNil()) return false;
         if (isBoolean()) return std::get<bool>(data);
         if (isNumber()) return std::get<double>(data) != 0;
-        return true; // Strings are always truthy
+        return true; // Strings and callables are always truthy
     }
     
     // Equality
@@ -75,6 +73,8 @@ public:
             return std::get<std::string>(data) == std::get<std::string>(other.data);
         if (isBoolean() && other.isBoolean())
             return std::get<bool>(data) == std::get<bool>(other.data);
+        if (isCallable() && other.isCallable())
+            return std::get<std::shared_ptr<LoxCallable>>(data) == std::get<std::shared_ptr<LoxCallable>>(other.data);
         return false; // Different types are never equal
     }
 

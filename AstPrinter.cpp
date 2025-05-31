@@ -45,6 +45,17 @@ string AstPrinter::visitLogical(Logical* expr) {
     return parenthesize(expr->op.lexeme, expr->left.get(), expr->right.get());
 }
 
+string AstPrinter::visitCall(Call* expr) {
+    string result = "(call " + expr->callee->accept(*this);
+    
+    for (const auto& arg : expr->arguments) {
+        result += " " + arg->accept(*this);
+    }
+    
+    result += ")";
+    return result;
+}
+
 string AstPrinter::parenthesize(const string& name, Expr* expr) {
     // TODO: Implement this method
     // Create a string that wraps the expression in parentheses with the name
@@ -67,3 +78,4 @@ string AstPrinter::parenthesize(const string& name, Expr* expr1, Expr* expr2) {
     ss << ")";
     return ss.str();
 }
+ 

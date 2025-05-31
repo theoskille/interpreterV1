@@ -12,6 +12,7 @@ using std::shared_ptr;
 
 class Assign;
 class Binary;
+class Call;
 class Grouping;
 class LiteralExpr;
 class Logical;
@@ -25,6 +26,7 @@ public:
     virtual ~ExprVisitor() = default;
     virtual R visitAssign(Assign* expr) = 0;
     virtual R visitBinary(Binary* expr) = 0;
+    virtual R visitCall(Call* expr) = 0;
     virtual R visitGrouping(Grouping* expr) = 0;
     virtual R visitLiteralExpr(LiteralExpr* expr) = 0;
     virtual R visitLogical(Logical* expr) = 0;
@@ -35,6 +37,7 @@ public:
 // Convenience type aliases for common visitor types
 using ExprStringVisitor = ExprVisitor<std::string>;
 using ValueVisitor = ExprVisitor<Value>;
+using VoidExprVisitor = ExprVisitor<void>;
 
 // Base expression class
 class Expr {
@@ -42,6 +45,7 @@ public:
     virtual ~Expr() = default;
     virtual std::string accept(ExprStringVisitor& visitor) = 0;
     virtual Value accept(ValueVisitor& visitor) = 0;
+    virtual void accept(VoidExprVisitor& visitor) = 0;
 };
 
 class Assign : public Expr {
@@ -54,6 +58,10 @@ public:
 
     Value accept(ValueVisitor& visitor) override {
         return visitor.visitAssign(this);
+    }
+    
+    void accept(VoidExprVisitor& visitor) override {
+        visitor.visitAssign(this);
     }
 
     // Fields
@@ -72,11 +80,37 @@ public:
     Value accept(ValueVisitor& visitor) override {
         return visitor.visitBinary(this);
     }
+    
+    void accept(VoidExprVisitor& visitor) override {
+        visitor.visitBinary(this);
+    }
 
     // Fields
     shared_ptr<Expr> left;
     Token op;
     shared_ptr<Expr> right;
+};
+
+class Call : public Expr {
+public:
+    Call(const shared_ptr<Expr>& callee, const Token& paren, const std::vector<shared_ptr<Expr>>& arguments) : callee(callee), paren(paren), arguments(arguments) {}
+
+    std::string accept(ExprStringVisitor& visitor) override {
+        return visitor.visitCall(this);
+    }
+
+    Value accept(ValueVisitor& visitor) override {
+        return visitor.visitCall(this);
+    }
+    
+    void accept(VoidExprVisitor& visitor) override {
+        visitor.visitCall(this);
+    }
+
+    // Fields
+    shared_ptr<Expr> callee;
+    Token paren;
+    std::vector<shared_ptr<Expr>> arguments;
 };
 
 class Grouping : public Expr {
@@ -89,6 +123,10 @@ public:
 
     Value accept(ValueVisitor& visitor) override {
         return visitor.visitGrouping(this);
+    }
+    
+    void accept(VoidExprVisitor& visitor) override {
+        visitor.visitGrouping(this);
     }
 
     // Fields
@@ -106,6 +144,10 @@ public:
     Value accept(ValueVisitor& visitor) override {
         return visitor.visitLiteralExpr(this);
     }
+    
+    void accept(VoidExprVisitor& visitor) override {
+        visitor.visitLiteralExpr(this);
+    }
 
     // Fields
     Literal value;
@@ -121,6 +163,10 @@ public:
 
     Value accept(ValueVisitor& visitor) override {
         return visitor.visitLogical(this);
+    }
+    
+    void accept(VoidExprVisitor& visitor) override {
+        visitor.visitLogical(this);
     }
 
     // Fields
@@ -140,6 +186,10 @@ public:
     Value accept(ValueVisitor& visitor) override {
         return visitor.visitVariable(this);
     }
+    
+    void accept(VoidExprVisitor& visitor) override {
+        visitor.visitVariable(this);
+    }
 
     // Fields
     Token name;
@@ -155,6 +205,10 @@ public:
 
     Value accept(ValueVisitor& visitor) override {
         return visitor.visitUnary(this);
+    }
+    
+    void accept(VoidExprVisitor& visitor) override {
+        visitor.visitUnary(this);
     }
 
     // Fields

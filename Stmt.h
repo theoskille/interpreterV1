@@ -14,6 +14,8 @@ using std::shared_ptr;
 class Block;
 class If;
 class Expression;
+class Function;
+class Return;
 class Var;
 class Print;
 class While;
@@ -26,6 +28,8 @@ public:
     virtual R visitBlock(Block* stmt) = 0;
     virtual R visitIf(If* stmt) = 0;
     virtual R visitExpression(Expression* stmt) = 0;
+    virtual R visitFunction(Function* stmt) = 0;
+    virtual R visitReturn(Return* stmt) = 0;
     virtual R visitVar(Var* stmt) = 0;
     virtual R visitPrint(Print* stmt) = 0;
     virtual R visitWhile(While* stmt) = 0;
@@ -91,6 +95,41 @@ public:
 
     // Fields
     shared_ptr<Expr> expression;
+};
+
+class Function : public Stmt {
+public:
+    Function(const Token& name, const std::vector<Token*>& params, const std::vector<shared_ptr<Stmt>>& body) : name(name), params(params), body(body) {}
+
+    std::string accept(StmtStringVisitor& visitor) override {
+        return visitor.visitFunction(this);
+    }
+
+    void accept(VoidVisitor& visitor) override {
+        visitor.visitFunction(this);
+    }
+
+    // Fields
+    Token name;
+    std::vector<Token*> params;
+    std::vector<shared_ptr<Stmt>> body;
+};
+
+class Return : public Stmt {
+public:
+    Return(const Token& keyword, const shared_ptr<Expr>& value) : keyword(keyword), value(value) {}
+
+    std::string accept(StmtStringVisitor& visitor) override {
+        return visitor.visitReturn(this);
+    }
+
+    void accept(VoidVisitor& visitor) override {
+        visitor.visitReturn(this);
+    }
+
+    // Fields
+    Token keyword;
+    shared_ptr<Expr> value;
 };
 
 class Var : public Stmt {

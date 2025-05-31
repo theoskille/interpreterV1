@@ -20,6 +20,11 @@ class Environment {
         void define(std::string name, Value value);
         Value get(Token name);
         void assign(Token name, Value value);
+        
+        // New methods for resolver
+        Environment* ancestor(int distance);
+        Value getAt(int distance, const std::string& name);
+        void assignAt(int distance, Token name, Value value);
 };
 
 #endif // ENVIRONMENT_H

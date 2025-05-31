@@ -11,7 +11,7 @@ enum TokenType {
 };
 
 // Array of token type names that maps directly to the enum values
-inline constexpr std::string_view TOKEN_NAMES[] = {
+static const char* TOKEN_NAMES[] = {
     "LEFT_PAREN", "RIGHT_PAREN", "LEFT_BRACE", "RIGHT_BRACE", "COMMA", "DOT", "MINUS", "PLUS", "SEMICOLON", "SLASH", "STAR",
     "BANG", "BANG_EQUAL", "EQUAL", "EQUAL_EQUAL", "GREATER", "GREATER_EQUAL", "LESS", "LESS_EQUAL",
     "IDENTIFIER", "STRING", "NUMBER",

@@ -18,4 +18,4 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Token& token);
 };
 
-#endif // TOKEN_H
+#endif // TOKEN_H 

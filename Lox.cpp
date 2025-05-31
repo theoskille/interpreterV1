@@ -9,6 +9,7 @@
 #include "Stmt.h"
 #include "AstPrinter.h"
 #include "Interpreter.h"
+#include "Resolver.h"
 using namespace std;
 
 // Initialize static members
@@ -33,10 +34,20 @@ void Lox::run(string source) {
     if(hadError)
         return;
 
+    // Create the interpreter
+    Interpreter interpreter;
+    
+    // Run the resolver
+    Resolver resolver(interpreter);
+    resolver.resolve(statements);
+    
+    // Stop if there was a resolution error
+    if(hadError)
+        return;
+
     // Interpret the statements
     if (!statements.empty()) {
         cout << "\nInterpreted Result:" << endl;
-        Interpreter interpreter;
         interpreter.interpret(statements);
     }
 }

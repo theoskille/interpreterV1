@@ -1,0 +1,15 @@
+// Test global variables
+var global = "I am global";
+
+{
+  // Local scope
+  var local = "I am local";
+  print global;  // Should access the global
+  print local;   // Should access the local
+}
+
+print global;    // Should access the global
+// print local;  // This would error - local is out of scope
+
+// Test native function in global scope
+print clock();  // The built-in clock function should be available 

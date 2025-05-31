@@ -18,6 +18,7 @@ int main(int argc, char* argv[]) {
     vector<string> exprAstDef = {
         "Assign: Token name, shared_ptr<Expr> value",
         "Binary: shared_ptr<Expr> left, Token op, shared_ptr<Expr> right",
+        "Call: shared_ptr<Expr> callee, Token paren, std::vector<shared_ptr<Expr>> arguments",
         "Grouping: shared_ptr<Expr> expression",
         "LiteralExpr: Literal value",
         "Logical: shared_ptr<Expr> left, Token op, shared_ptr<Expr> right",
@@ -30,6 +31,8 @@ int main(int argc, char* argv[]) {
         "Block: std::vector<shared_ptr<Stmt>> statements",
         "If: shared_ptr<Expr> condition, shared_ptr<Stmt> thenBranch, shared_ptr<Stmt> elseBranch",
         "Expression: shared_ptr<Expr> expression",
+        "Function: Token name, std::vector<Token*> params, std::vector<shared_ptr<Stmt>> body",
+        "Return: Token keyword, shared_ptr<Expr> value",
         "Var: Token name, shared_ptr<Expr> initializer",
         "Print: shared_ptr<Expr> expression",
         "While: shared_ptr<Expr> condition, shared_ptr<Stmt> body"
